@@ -1,0 +1,37 @@
+import { chromium, expect } from '@playwright/test';
+import { LoginPage } from './pages/login.page';
+import { TEST_ACCOUNT } from './data/testData'; // 从数据文件导入测试数据
+
+async function globalSetup() {
+    // 创建浏览器
+    const browser = await chromium.launch();
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // 登录
+    try {
+        // 导航到登录页
+        const loginPage = new LoginPage(page);
+        await loginPage.goto();
+        await loginPage.login(TEST_ACCOUNT.username, TEST_ACCOUNT.password);
+
+        // 检查元素是否存在，如果存在则执行选择门店操作
+        // const element = page.getByText('账套机构选择 退出创建账套');
+        // if (await element.isVisible()) {
+        //     // 选择门店点击进入主界面
+        //     await loginPage.navigateToMainInterface();
+        // }
+        await loginPage.navigateToMainInterface();
+        // 保存cookies到文件
+        const storageState = await page.context().storageState();
+        const fs = require('fs');
+        fs.writeFileSync('cookies/auth.json', JSON.stringify(storageState, null, 2));
+
+    } catch (error) {
+        console.error('登录失败:', error);
+    }
+    
+}
+
+
+export default globalSetup; // 严格导出单个函数

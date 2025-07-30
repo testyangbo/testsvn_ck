@@ -1,0 +1,31 @@
+import { test, expect } from '@playwright/test';
+import { testConfig } from '../../config/testConfig';
+import { PurchaseOrderPage } from '../../pages/purchaseOrder.page';
+
+// 在测试配置中添加
+test.use({ storageState: 'cookies/auth.json' });
+// 复用登录状态
+
+test('采购订单正常过账', async ({ page }) => {
+  await page.goto(`${testConfig.baseURL}`);
+  const purchaseOrderPage = new PurchaseOrderPage(page);
+  await purchaseOrderPage.navigateToPurchaseOrder();
+  await purchaseOrderPage.createNewOrder();
+  await purchaseOrderPage.selectSupplier();
+  await purchaseOrderPage.setDeliveryDate();
+  await purchaseOrderPage.selectProduct();
+  await purchaseOrderPage.setQuantity();
+  await purchaseOrderPage.saveOrder();
+});
+
+test('采购订单不正常过账', async ({ page }) => {
+  await page.goto(`${testConfig.baseURL}`);
+  const purchaseOrderPage = new PurchaseOrderPage(page);
+  await purchaseOrderPage.navigateToPurchaseOrder();
+  await purchaseOrderPage.createNewOrder();
+  await purchaseOrderPage.selectSupplier();
+  await purchaseOrderPage.setDeliveryDate();
+  await purchaseOrderPage.selectProduct();
+  await purchaseOrderPage.setQuantity();
+  await purchaseOrderPage.saveOrder();
+});

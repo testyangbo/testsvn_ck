@@ -1,0 +1,140 @@
+import { testConfig } from '../config/testConfig';
+import { Browser, Page, expect } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
+import globalSetup from '../globalSetup';
+
+/**
+ * 初始化浏览器上下文
+ * @param browser 浏览器实例
+ * @returns 包含上下文和页面对象的Promise
+ */
+export async function initializeBrowserContext(browser: Browser) {
+    console.log('开始初始化浏览器上下文...');
+    // 检查auth.json文件是否存在且未过期
+    let context;
+    const authFilePath = 'cookies/auth.json';
+    if (fs.existsSync(authFilePath)) {
+        const stats = fs.statSync(authFilePath);
+        const modifiedTime = stats.mtime;
+        const currentTime = new Date();
+        const timeDifference = (currentTime.getTime() - modifiedTime.getTime()) / (1000 * 60); // 转换为分钟
+        
+        if (timeDifference <= 60) {
+            console.log('检测到有效的已保存登录状态，正在使用...');
+            // 如果存在且未过期，使用保存的登录状态
+            context = await browser.newContext({ storageState: authFilePath, permissions: [] });
+        } else {
+            // 如果存在但已过期（超过1小时），需要重新执行全局登录
+            console.log('已保存的登录状态已过期，正在自动执行全局登录...');
+            try {
+                // 执行全局登录
+                await globalSetup();
+                console.log('全局登录执行完成');
+                // 重新加载上下文
+                context = await browser.newContext({ storageState: authFilePath, permissions: [] });
+            } catch (error) {
+                console.error('全局登录执行失败:', error);
+                throw new Error('全局登录执行失败，请手动运行全局登录脚本');
+            }
+        }
+    } else {
+        // 如果不存在，需要先执行全局登录
+        console.log('未检测到已保存的登录状态，正在自动执行全局登录...');
+        try {
+            // 执行全局登录
+            await globalSetup();
+            console.log('全局登录执行完成');
+            // 重新加载上下文
+            context = await browser.newContext({ storageState: authFilePath, permissions: [] });
+        } catch (error) {
+            console.error('全局登录执行失败:', error);
+            throw new Error('全局登录执行失败，请手动运行全局登录脚本');
+        }
+    }
+    
+    const page = await context.newPage();
+    
+    // 导航到首页
+    console.log('开始导航到首页...');
+    await page.goto(testConfig.baseURL + testConfig.index);
+    await expect(page.getByRole('tab', { name: '首页' })).toBeVisible();
+    console.log('成功导航到首页');
+    
+    console.log('浏览器上下文初始化完成');
+    return { context, page };
+}
+
+
+/**
+ * 处理页面弹窗
+ * @param page 页面对象
+ */
+export async function handleAlerts(page: Page) {
+    // 检测是否存在弹窗
+    const remainingAlerts = await page.getByRole('alert').count();
+    
+    if (remainingAlerts > 0) {
+        console.log(`检测到 ${remainingAlerts} 个弹窗`);
+
+         console.log('开始处理页面弹窗...');
+    
+    // 使用脚本方式循环关闭所有弹窗
+    const closeAlertsScript = `
+        const alerts = document.querySelectorAll('[role="alert"]');
+        alerts.forEach(alert => {
+            const closeButtons = alert.querySelectorAll('button');
+            closeButtons.forEach(button => {
+                if (button.textContent.includes('关闭') || button.textContent.includes('Close') || button.getAttribute('aria-label') === 'Close') {
+                    button.click();
+                }
+            });
+            
+            // 如果没有找到关闭按钮，尝试点击弹窗本身
+            if (closeButtons.length === 0) {
+                alert.click();
+            }
+        });
+    `;
+    
+    try {
+        // 执行脚本关闭弹窗
+        await page.evaluate(closeAlertsScript);
+        console.log('已执行脚本关闭弹窗');
+        
+        // 等待一段时间确保弹窗完全关闭
+        await page.waitForTimeout(1000);
+        
+        // 检查是否还有剩余弹窗
+        const remainingAlerts = await page.getByRole('alert').count();
+        console.log(`剩余 ${remainingAlerts} 个弹窗`);
+    } catch (error) {
+        console.error('处理弹窗时遇到错误:', error);
+    }
+    
+    console.log('弹窗处理完成');
+
+    } else {
+        console.log('没有检测到弹窗');
+        return;
+    }
+
+}
+
+
+/**
+ * 设置测试环境
+ * @param browser 浏览器实例
+ * @returns 包含上下文和页面对象的Promise
+ */
+export async function setupTestEnvironment(browser: Browser) {
+    // 使用通用工具初始化浏览器上下文
+    const result = await initializeBrowserContext(browser);
+    const context = result.context;
+    const page = result.page;
+
+    // 处理所有弹窗
+    await handleAlerts(page);
+
+    return { context, page };
+}

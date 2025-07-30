@@ -1,0 +1,11 @@
+Since Git is not installed and no diff was provided, I can't generate a specific commit message. However, here's a general template for when you're ready to commit:
+
+```
+Add initial project setup
+
+Set up basic project structure with core dependencies.
+Includes configuration files and directory layout needed
+for future development.
+```
+
+When you have Git installed and actual changes to commit, please provide the `git diff` output and I'll generate a more specific, meaningful commit message based on your actual changes.

@@ -1,0 +1,30 @@
+import { Page } from '@playwright/test';
+import { TEST_Menu } from '../data/testmenu';
+
+/**
+ * OpenTheMenuPage 类
+ * 
+ * 该类封装了与菜单操作相关的页面交互方法，
+ * 主要用于在测试过程中打开指定的子菜单。
+ */
+export class OpenTheMenuPage {
+    private  page: Page;
+
+    /**
+     * 构造函数
+     * @param page Playwright Page 对象
+     */
+    constructor(page: Page) { 
+        this.page = page;
+    }
+
+    /**
+     * 打开指定名称的子菜单
+     * @param childMenuName 子菜单名称
+     */
+    async openMenu(childMenuName: string) {
+        console.log(`打开菜单: ${childMenuName}`);
+        await this.page.getByText(TEST_Menu.basicInformation, { exact: true }).click();
+        await this.page.locator('css=.menu-popo').getByText(childMenuName).click();
+    }
+}

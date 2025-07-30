@@ -1,0 +1,67 @@
+import { Page } from '@playwright/test';
+import { TEST_DATA } from '../data/testData';
+import { TEST_Menu } from '../data/testmenu';
+
+export class PurchaseOrderPage {
+  private readonly page: Page;
+
+  // 页面元素选择器
+  private get purchaseBusinessMenu() { return this.page.getByText(TEST_Menu.Purchase); }
+  private get purchaseOrderMenu() { return this.page.locator('.title.textOver').getByText(TEST_Menu.purchaseOrder, { exact: true }); }
+  private get addButton() { return this.page.getByRole('button', { name: '' }).first(); }
+  private get supplierCell() { return this.page.getByRole('cell', { name: TEST_DATA.supplier, exact: true }).locator('div'); }
+  private get deliveryDateInput() { return this.page.getByRole('textbox', { name: '请选择 交货日期' }); }
+  private get productSelectIcon() { return this.page.getByRole('cell', { name: '' }).locator('i'); }
+  private get productItem() { return this.page.getByLabel('商品选择').getByText(TEST_DATA.product); }
+  private get quantityInput() { return this.page.getByRole('spinbutton', { name: '请输入数量' }); }
+  private get saveButton() { return this.page.getByRole('button', { name: '保存' }); }
+
+  constructor(page: Page) {
+    this.page = page;
+  }
+
+  // 页面操作方法
+  async navigateToPurchaseOrder() {
+    console.log('开始导航到采购订单页面...');
+    await this.purchaseBusinessMenu.hover();
+    await this.purchaseOrderMenu.click();
+    console.log('成功导航到采购订单页面');
+  }
+
+  async createNewOrder() {
+    console.log('开始创建新订单...');
+    await this.addButton.click();
+    console.log('成功创建新订单');
+  }
+
+  async selectSupplier() {
+    console.log('开始选择供应商...');
+    await this.supplierCell.dblclick();
+    console.log('成功选择供应商');
+  }
+
+  async setDeliveryDate() {
+    console.log('开始设置交货日期...');
+    await this.deliveryDateInput.fill(TEST_DATA.deliveryDate);
+    console.log('成功设置交货日期');
+  }
+
+  async selectProduct() {
+    console.log('开始选择商品...');
+    await this.productSelectIcon.click();
+    await this.productItem.dblclick();
+    console.log('成功选择商品');
+  }
+
+  async setQuantity() {
+    console.log('开始设置数量...');
+    await this.quantityInput.fill(TEST_DATA.orderQuantity);
+    console.log('成功设置数量');
+  }
+
+  async saveOrder() {
+    console.log('开始保存订单...');
+    await this.saveButton.click();
+    console.log('成功保存订单');
+  }
+}

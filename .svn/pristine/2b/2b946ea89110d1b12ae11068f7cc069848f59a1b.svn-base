@@ -1,0 +1,52 @@
+import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * 配置Playwright测试环境
+ * 启用HTML报告、截图和视频录制
+ */
+export default defineConfig({
+
+  testDir: './tests',
+
+  
+  // 测试报告配置
+  reporter: [
+    ['html', { outputFolder: 'playwright-report' }],
+    ['list']
+  ],
+
+  // 全局测试配置
+  use: {
+    // 启用截图功能（在成功和失败时都截图）
+    screenshot: 'on',
+    
+    // 启用视频录制（在成功和失败时都录制）
+    video: 'on',
+    
+    // 启用跟踪记录
+    trace: 'on',
+    
+    // 增加超时时间以避免跟踪记录超时
+    actionTimeout: 30000,
+    navigationTimeout: 30000,
+  },
+
+  // 项目配置
+  projects: [
+    {
+      name: 'chromium',
+      use: { 
+        ...devices['Desktop Chrome'],
+        // 为每个项目设置独立的超时
+        actionTimeout: 30000,
+        navigationTimeout: 30000,
+      },
+    },
+  ],
+
+  // 增加全局超时时间
+  timeout: 60000,
+  
+  globalSetup: './globalSetup.ts', // 全局登录设置文件路径
+  
+});

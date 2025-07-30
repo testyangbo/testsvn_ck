@@ -1,0 +1,72 @@
+// 登录页面对象模型
+import { Page, expect } from '@playwright/test';
+import { testConfig } from '../config/testConfig';
+import { TEST_ACCOUNT } from '../data/testData';
+  
+/**
+ * 登录页面对象
+ * 封装所有登录页面的元素定位和交互方法
+ */
+export class LoginPage {
+  // 页面对象构造函数
+  constructor(private readonly page: Page) {}
+  /**
+   * 导航到登录页面
+   * @param url 可选的自定义登录页URL
+   */
+  // 使用配置的baseURL
+  async goto(url: string = `${testConfig.baseURL}${testConfig.loginPath}`) {
+    console.log('开始导航到登录页面...');
+    await this.page.goto(url);
+    console.log('成功导航到登录页面');
+  }
+
+  /**
+   * 执行登录操作
+   * @param username 登录手机号
+   * @param password 登录密码
+   */
+  async login(username: string, password: string) {
+    console.log('开始执行登录操作...');
+    // 输入手机号
+    const phoneInput = this.page.getByRole('textbox', { name: '请输入手机号' });
+    await phoneInput.click();
+    await phoneInput.fill(username);
+    await expect(phoneInput).toHaveValue(username);
+    console.log('成功输入手机号');
+
+    // 输入密码
+    const passwordInput = this.page.getByRole('textbox', { name: '请输入登录密码' });
+    await passwordInput.click();
+    await passwordInput.fill(password);
+    await expect(passwordInput).toHaveValue(password);
+    console.log('成功输入密码');
+
+    // 勾选同意条款
+    await this.page
+      .locator('label')
+      .filter({ hasText: '我已阅读并同意 用户协议' })
+      .locator('span')
+      .nth(1)
+      .click();
+    console.log('成功勾选同意条款');
+
+    // 点击登录按钮
+    await this.page.getByRole('button', { name: '登录' }).click();
+    console.log('成功点击登录按钮');
+  }
+
+  /**
+   * 导航到主界面
+   * 通过点击门店名称进入主界面并验证加载成功
+   */
+  async navigateToMainInterface() {
+    console.log('开始导航到主界面...');
+    // 选择门店点击进入
+    await this.page.getByText(TEST_ACCOUNT.StoreName).dblclick();
+
+    // 验证主界面加载成功
+    await expect(this.page).toHaveURL(/\/wel\//);
+    console.log('成功导航到主界面');
+  }
+}

@@ -1,0 +1,32 @@
+/**
+ * 测试数据配置文件
+ * 集中管理所有测试环境使用的敏感数据和配置参数
+ */
+
+export const TEST_ACCOUNT = {
+  username: '17002808936', // 测试账号手机号
+  password: 'a1234567' ,   // 测试账号密码,
+  StoreName: '工具测试（单店）'
+
+};
+
+export const TEST_DATA = {
+  supplier: '成都',             // 默认供应商
+  product: '奥美拉唑肠溶胶囊1', // 默认测试商品
+  quantity: '1',               // 默认商品数量
+  orderQuantity: '2',          // 采购订单数量
+  deliveryDate: (() => { const today = new Date(); return `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`; })()     // 当前系统日期
+};
+
+
+
+// 其他测试数据
+// export const INVALID_ACCOUNT = {
+//   username: '13800138000',
+//   password: 'wrongpassword'
+// };
+
+// export const LONG_PASSWORD = {
+//   username: '19136127446',
+//   password: 'Qf810101'.repeat(10)
+// };

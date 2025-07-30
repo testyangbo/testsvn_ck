@@ -1,0 +1,63 @@
+import { testConfig } from '../config/testConfig';
+import { Browser, Page, expect } from '@playwright/test';
+import * as fs from 'fs';
+
+/**
+ * 初始化浏览器上下文
+ * @param browser 浏览器实例
+ * @returns 包含上下文和页面对象的Promise
+ */
+export async function initializeBrowserContext(browser: Browser) {
+    console.log('开始初始化浏览器上下文...');
+    // auth.json文件是否存在
+    let context;
+    if (fs.existsSync('cookies/auth.json')) {
+        console.log('检测到已保存的登录状态，正在使用...');
+        // 如果存在，使用保存的登录状态
+        context = await browser.newContext({ storageState:'cookies/auth.json', permissions: [] });
+    } else {
+        // 如果不存在，需要先执行全局登录
+        console.log('未检测到已保存的登录状态');
+        throw new Error('cookies/auth.json文件不存在，请先运行全局登录脚本');
+    }
+    
+    const page = await context.newPage();
+    
+    // 导航到首页
+    console.log('开始导航到首页...');
+    await page.goto(testConfig.baseURL + testConfig.index);
+    console.log('成功导航到首页');
+    //await expect(page.getByRole('tab', { name: testConfig.baseURL.homeTab })).toBeVisible();
+    
+    console.log('浏览器上下文初始化完成');
+    return { context, page };
+}
+
+
+/**
+ * 处理页面弹窗
+ * @param page 页面对象
+ */
+export async function handleAlerts(page: Page) {
+    console.log('开始处理页面弹窗...');
+    // 循环处理所有弹窗
+    let alertCount = await page.getByRole('alert').count();
+    console.log(`检测到 ${alertCount} 个弹窗`);
+
+    let processed = 0;
+    while (alertCount > 0) {
+        try {
+            await page.getByRole('alert').locator('div').nth(processed + 1).click({ timeout: 2000 });
+            console.log('成功处理一个弹窗');
+            processed++;
+            // 重新检查弹窗
+            alertCount = await page.getByRole('alert').count();
+            console.log(`已处理 ${processed} 个弹窗，剩余 ${alertCount} 个弹窗`);
+        } catch {
+            console.log('处理弹窗时遇到错误，退出循环');
+            break; // 如果点击失败则退出循环
+        }
+
+    }
+    console.log('弹窗处理完成');
+}
