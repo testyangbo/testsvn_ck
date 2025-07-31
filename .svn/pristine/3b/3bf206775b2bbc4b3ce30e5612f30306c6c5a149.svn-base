@@ -1,0 +1,71 @@
+// 为元素定义添加注释，说明其用途
+export const TEST_BASIC_ELEMENT = {
+    // 按钮元素
+    button: {
+        clickNew: '新增',
+        save: '保存',
+        search: '查询',
+        confirm: '确定',
+        cancel: '取消',
+    },
+
+    // 列表操作按钮
+    listOperationButton: {
+
+        delete: '删除',
+        edit: '编辑',
+
+    },
+    
+    // 商品资料详情元素
+    ptypeDetails: {
+        // 基础信息
+        ptypeFullName: '请输入通用名',
+        ptypeBarCode: '请输入条码',
+        ptypeName: '请输入商品名称',
+        ptypeSpecification: '请输入规格',
+        ptypeDosageForm: '请输入剂型',
+        ptypeFTypeName: '请输入生产厂商',
+        ptypeApprovalNumber: '请输入批准文号',
+        approvalNumberValidate: '批准文号有效期',
+        ptypeClassId: '商品分类',
+        validityDate: '有效期',
+        validityDays: '近效期天数',
+        
+        // 价格/处方
+        baseUnit: '基本单位',
+        ptypeRetailPrice: '商品零售价',
+        minSalePrice: '最低售价',
+        prescriptionPrice: '处方价',
+        vipPrice: '会员价',
+        rxType: '处方类型',
+        
+        // 质量管理
+        prescriptionSales: '凭处方销售',
+        traceabilityCode: '追溯码管控',
+
+        
+        // 补充信息
+        batchCheck: '批号必录',
+        ValidityCheck: '效期必录',
+        taxRate: '税率',
+        expireDays: '提前停售天数',
+        remark: '备注',
+        functionalIndications: '功能主治',
+        drugIngredients: '药品成分',
+        dosage: '用法用量',
+        drugTraits: '药品性状',
+        adverseReactions: '不良反应',
+        taboo: '禁忌',
+        
+    },
+    
+    // 搜索相关元素
+    SearchInput: {
+
+    ptype: '编号、名称、通用名、批准文号、条码查询',
+
+    },
+
+
+}

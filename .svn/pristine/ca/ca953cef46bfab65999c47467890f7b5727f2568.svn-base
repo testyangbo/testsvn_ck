@@ -27,8 +27,6 @@ export class OpenTheMenuPage {
         console.log(`打开菜单: ${MainMenuName} -> ${childMenuName}`);
         await this.page.getByText(MainMenuName, { exact: true }).hover();
         await this.page.locator('css=.menu-popo').getByText(childMenuName, { exact: true }).click();
-        // 等待页面加载完成，使用domcontentloaded替代networkidle以避免超时
-        await this.page.waitForLoadState('domcontentloaded');
     }
 
     /**

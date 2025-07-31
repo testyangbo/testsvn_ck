@@ -15,8 +15,9 @@ export class PtypePage {
      */
     constructor(page: Page) { 
         this.page = page;
-    };
+    }
     
+
     /**
      * 点击匹配指定文本的按钮（支持字符间有空格的情况）
      * @param buttonText 用于匹配按钮文本的字符串
@@ -31,7 +32,7 @@ export class PtypePage {
             console.error(`点击按钮 '${buttonText}' 失败:`, error.message);
             throw error;
         }
-    };
+    }
 
     /**
      * 点击指定名称的录入框，底层文字描述为inputName
@@ -40,8 +41,9 @@ export class PtypePage {
     async getByRoleClickInput(inputName: string) {
         console.log(`点击录入框: ${inputName}`);
         await this.page.getByRole('textbox', { name: inputName, exact: true }).click();
-    };
+    }
     
+
     /**
      * 在指定名称的录入框中输入值，底层文字描述为inputName
      * @param inputName 录入框名称
@@ -50,7 +52,7 @@ export class PtypePage {
     async getByRoleInputValue(inputName: string, inputValue: string) {
         console.log(`在录入框 '${inputName}' 中输入值: ${inputValue}`);
         await this.page.getByRole('textbox', { name: inputName }).fill(inputValue);
-    };
+    }
 
     /**
      * 点击指定名称
@@ -59,7 +61,7 @@ export class PtypePage {
     async getByTextClick(text: string) {
         console.log(`点击选择: ${text}`);
         await this.page.getByText(text, { exact: true }).click();
-    };
+    }
 
     /**
      * 通过占位符定位录入框并输入值，元素属性有placeholder
@@ -69,7 +71,8 @@ export class PtypePage {
     async getByPlaceholderInput(placeholder: string, inputValue: string) {
         console.log(`在录入框 '${placeholder}' 中输入值: ${inputValue}`);
         await this.page.getByPlaceholder(placeholder, { exact: true }).fill(inputValue);
-    };
+    }
+
 
     /**
      * 定位指定标签关联的第一个输入框元素
@@ -77,22 +80,16 @@ export class PtypePage {
      * @param label 标签名称
      * @returns 返回定位到的第一个输入框元素的 Promise 对象
      */
-    // 更稳定的CSS选择器
+    // 替换XPath表达式为更稳定的CSS选择器
     async labelInput(label: string) {
         //console.log(`指定标签 '${label}' 的输入框`);
         return this.page.locator(`label:has-text("${label}") + * input`).first();
-    };
+    }
     
-    /**
-     * 定位指定标签关联的第一个textarea输入框元素
-     * @param label 标签名称
-     * @returns 返回定位到的第一个textarea输入框元素的 Promise 对象
-     */
     async labelTextareaInput(label: string) {
         //console.log(`指定标签 '${label}' 的textarea输入框`);
         return this.page.locator(`label:has-text("${label}") + * textarea`).first();
-    };
-
+    }
     /**
      * 点击指定标签的下拉框并选择选项
      * @param label 标签名称
@@ -102,7 +99,7 @@ export class PtypePage {
         console.log(`点击下拉框 '${label}' 并选择选项 '${option}'`);
         await (await this.labelInput(label)).click();
         await this.getByTextClick(option);
-    };
+    }
 
     /**
      * 输入指定标签的输入框
@@ -111,9 +108,9 @@ export class PtypePage {
      */
     async inputLabelValue(label: string, inputValue: string) {
         console.log(`在 '${label}' 输入值: ${inputValue}`);
-        await (await this.labelInput(label)).clear();
         await (await this.labelInput(label)).fill(inputValue);
-    };
+    }
+
 
     /**
      * 输入指定标签的输入框
@@ -123,16 +120,16 @@ export class PtypePage {
     async labelTextareaInputValue(label: string, inputValue: string) {
         console.log(`在 '${label}' 输入值: ${inputValue}`);
         await (await this.labelTextareaInput(label)).fill(inputValue);
-    };
+    }
 
     // 列表第一行数据操作
     async listFirstRowOperation(operationName: string) {
         console.log(`列表第一行数据操作: ${operationName}`);
         await this.page.getByRole('row', { name: '1' }).getByRole('button', { name: operationName }).click();
-    };
+    }
 
 
-    // 断言列表数据结果
+    // 断言文本元素可见
     async assertElementVisible(ptypeSearch: string) {
         console.log(`断言 '${ptypeSearch}' 存在且可见，数量等于1`);
 
@@ -141,16 +138,15 @@ export class PtypePage {
         await expect(locator.first()).toBeVisible({ timeout: 10000 });
         const count = await locator.count();
         if (count === 0) {
-            console.log(`断言结果: 商品 '${ptypeSearch}' 不存在`);
             expect(count).toBe(0);
-        } else if (count === 1) {
-            console.log(`断言结果: 商品 '${ptypeSearch}' 存在，数量为 ${count}`);
+            console.log(`断言结果: 商品 '${ptypeSearch}' 不存在`);
+        } if (count === 1) {
             expect(count).toBe(1);
+            console.log(`断言结果: 商品 '${ptypeSearch}' 存在，数量为 ${count}`);
         } else {
             console.log(`断言结果: 商品 '${ptypeSearch}' 存在多个，数量为 ${count}`);
-        };
-        return count;
-    };
+        } 
+    }
 
     
     // 断言是否有必填项没填写，css=.el-form-item__error，大于0循环打印该元素的文本
@@ -163,48 +159,14 @@ export class PtypePage {
             for (let i = 0; i < count; i++) {
                 const errorText = await locator.nth(i).textContent();
                 console.log(`必填项的错误信息: ${errorText}`);
-            };
+            }
             expect(count).toBeGreaterThan(0);
             // 如果有必填项未填写，则抛出异常，不再执行后续代码
             throw new Error('存在必填项未填写，测试用例执行终止');
         } else {
             expect(count).toBe(0);
             console.log(`断言结果: 没有必填项没填写`);
-        };
-    };
+        }
+    }
 
-    /**
-     * 商品校验处理
-     * @param checkItem 校验项名称
-     * @param saveContinue 保存继续按钮名称
-     */
-    async checkItemClick(checkItem: string, saveContinue: string) {
-        console.log(`检查是否有: ${checkItem} 弹窗`);
-        // 最多检查2次
-        for (let i = 0; i < 2; i++) {
-            const checkItemCount = await this.page.getByRole('dialog').getByText(checkItem).count();
-            if (checkItemCount > 0) {
-                console.log(`检测到 ${checkItem} 弹窗，执行保存继续`);
-                await this.page.getByRole('dialog').getByText(saveContinue).click();
-                // 等待弹窗消失
-                await this.page.waitForTimeout(1000);
-            } else {
-                console.log(`未检测到 ${checkItem} 弹窗, 执行后面的`);
-                break;
-            };
-        };
-    };
-
-    /**
-     * 点击商品左侧基础分类
-     * @param categoryName 分类名称
-     */
-    async clickLeftCategory(categoryName: string) {
-        console.log(`点击左侧分类: ${categoryName}`);
-        await this.page.getByLabel('基础分类').getByText(categoryName).click();
-    };
-
-
-
-
-};
+}

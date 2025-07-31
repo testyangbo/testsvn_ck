@@ -1,4 +1,4 @@
-import { test, Page } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { setupTestEnvironment } from '../../pages/testUtils';
 import { readRandomLineFromCsv } from '../../common/randomCsvReader';
 import { generateRandomPrice } from '../../common/randomPriceGenerator';
@@ -9,25 +9,23 @@ import { PtypePage } from '../../pages/ptype.page';
 import { TEST_BASIC_ELEMENT } from '../../data/testBasicElement';
 import { TEST_Menu } from '../../data/testmenu';
 
-// 定义CSV文件路径并读取随机数据行
+// 使用示例
 const csvFilePath = path.join(__dirname, '../../data/商品资料.csv');
 const randomData = readRandomLineFromCsv(csvFilePath);
 
-// 使用serial模式确保测试用例按顺序执行
 test.describe.serial('商品资料', () => {
 
-    // 定义测试中使用的变量
     let context: any;
     let page: Page;
     let openTheMenuPage: any;
     let ptypePage: any;
     let ptypeFullName: string;
 
-    // 所有用例开始前执行，初始化浏览器上下文和页面
+    // 所有用例开始前执行
     test.beforeAll(async ({ browser }) => {
         console.log('开始执行 beforeAll 钩子');
         try {
-            // 使用通用工具设置测试环境，创建浏览器上下文和页面
+            // 使用通用工具设置测试环境
             const result = await setupTestEnvironment(browser);
             context = result.context;
             page = result.page;
@@ -35,33 +33,24 @@ test.describe.serial('商品资料', () => {
         } catch (error) {   
             console.error('初始化浏览器上下文失败:', error.message);
             throw error;
-        };
+        }
 
-        // 初始化菜单页面对象
         openTheMenuPage = new OpenTheMenuPage(page);
         console.log('beforeAll 钩子执行完成');
     });
 
-    // 每个测试用例执行前打开菜单
     test.beforeEach(async () => {
-        // 打开基础资料->商品资料菜单
         await openTheMenuPage.openMenu(TEST_Menu.basicInformation, TEST_Menu.ptype);
-        // 初始化商品资料页面对象
         ptypePage = new PtypePage(page);
-    });
+    })
 
-    
-    // 测试用例1：新增商品资料
+
     test('新增商品资料', async ({}) => {
-        // 点击新增按钮
         await ptypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.clickNew);
         
-        // 检查是否成功读取到测试数据
         if (randomData) {
-            // 生成唯一的商品全名
+            // 基础信息
             ptypeFullName = randomData['通用名'] + generateRandomUpperCase();
-            
-            // 填写基础信息
             await ptypePage.clickDropdownAndSelect(TEST_BASIC_ELEMENT.ptypeDetails.ptypeClassId, '工具新增');
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.ptypeFullName, ptypeFullName);
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.ptypeBarCode, randomData['条码']);
@@ -73,21 +62,18 @@ test.describe.serial('商品资料', () => {
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.approvalNumberValidate, '2029-12-31');
             await ptypePage.inputLabelValue(TEST_BASIC_ELEMENT.ptypeDetails.validityDate, '24');
             await ptypePage.inputLabelValue(TEST_BASIC_ELEMENT.ptypeDetails.validityDays, randomData['近效期天数']);
-            
-            // 填写价格/处方信息
+            // 价格/处方
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.baseUnit, randomData['基本单位']);
             // 零售价传入1-100以内的随机两位小数
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.ptypeRetailPrice, generateRandomPrice());
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.minSalePrice, '0.01');
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.prescriptionPrice, '1');
             await ptypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.ptypeDetails.vipPrice, '1');
-            
-            // 填写质量管理信息
+            // 质量管理
             await ptypePage.getByTextClick(TEST_BASIC_ELEMENT.ptypeDetails.traceabilityCode);
             await ptypePage.getByTextClick(TEST_BASIC_ELEMENT.ptypeDetails.prescriptionSales);
             await ptypePage.clickDropdownAndSelect(TEST_BASIC_ELEMENT.ptypeDetails.rxType, '处方药');
-            
-            // 填写补充信息
+            // 补充信息
             await ptypePage.getByTextClick(TEST_BASIC_ELEMENT.ptypeDetails.batchCheck);
             await ptypePage.getByTextClick(TEST_BASIC_ELEMENT.ptypeDetails.ValidityCheck);
             await ptypePage.inputLabelValue(TEST_BASIC_ELEMENT.ptypeDetails.taxRate, '20');
@@ -102,63 +88,59 @@ test.describe.serial('商品资料', () => {
 
         }else{
              throw new Error('无法读取测试数据');
-        };
+        }
 
-        // 点击保存按钮
+        // 保存
         await ptypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.save);
         // 断言是否有必填项没填写
         await ptypePage.assertRequiredFields();
-        
-        // 处理商品校验弹窗（如果出现）
-        await ptypePage.checkItemClick(TEST_BASIC_ELEMENT.ptypeDetails.checkItem, TEST_BASIC_ELEMENT.button.saveContinue);
 
         // 保存完成后，在列表中查找新增的商品
         await ptypePage.getByPlaceholderInput(TEST_BASIC_ELEMENT.SearchInput.ptype, ptypeFullName);
-        // 点击查询按钮
+        // 查询按钮
         await ptypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.search);
-        // 断言商品是否成功添加到列表中
+        // 断言
         await ptypePage.assertElementVisible(ptypeFullName);
+
     });
 
-    // 测试用例2：删除查询到的商品资料
+
     test('删除查询到商品资料', async ({}) => {
-         // 在列表中查找新增的商品
+         // 保存完成后，在列表中查找新增的商品
         await ptypePage.getByPlaceholderInput(TEST_BASIC_ELEMENT.SearchInput.ptype, ptypeFullName);
-        // 点击查询按钮
+        // 查询按钮
         await ptypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.search);
-        // 断言商品是否存在
+        // 断言
         await ptypePage.assertElementVisible(ptypeFullName);
-        // 点击列表第一行的删除按钮
+        // 点击删除按钮
         await ptypePage.listFirstRowOperation(TEST_BASIC_ELEMENT.listOperationButton.delete);
-        // 点击确认删除按钮
+        // 点击确认按钮
         await ptypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.confirm);
-        // 断言商品是否成功删除（这里逻辑可能需要修正，删除成功应该检查商品不存在）
+        // 断言
         await ptypePage.assertElementVisible(ptypeFullName);
-    });
+    })
 
-
-    // 每个测试用例执行后关闭菜单
     test.afterEach(async () => {
-        // 刷新页面，关闭当前菜单
+        // 刷新页面
         await openTheMenuPage.closeMenu(TEST_Menu.ptype);
-    });
+    })
 
-    // 所有用例结束后执行，清理资源
+    // 所有用例结束后执行
     test.afterAll(async () => {
         console.log('开始执行 afterAll 钩子');
-        // 关闭浏览器上下文和页面
+        // 关闭浏览器上下文
         try {
             if (page && page.close) {
                 await page.close();
                 console.log('页面已关闭');
-            };
+            }
             if (context && context.close) {
                 await context.close();
                 console.log('浏览器上下文已关闭');
-            };
+            }
         } catch (error) {
             console.error('关闭浏览器上下文时出错:', error.message);
-        };
+        }
         console.log('afterAll 钩子执行完成');
         
     });
