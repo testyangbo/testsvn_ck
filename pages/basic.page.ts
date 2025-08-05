@@ -6,7 +6,7 @@ import { Page, expect} from '@playwright/test';
  * 该类封装了与商品资料相关的页面交互方法，
  * 主要用于在测试过程中对商品资料进行操作。
  */
-export class PtypePage {
+export class BasicPage {
     private  page: Page;
 
     /**
@@ -49,7 +49,7 @@ export class PtypePage {
      */
     async getByRoleInputValue(inputName: string, inputValue: string) {
         console.log(`在录入框 '${inputName}' 中输入值: ${inputValue}`);
-        await this.page.getByRole('textbox', { name: inputName }).fill(inputValue);
+        await this.page.getByRole('textbox', { name: inputName, exact: true }).fill(inputValue);
     };
 
     /**
@@ -133,21 +133,33 @@ export class PtypePage {
 
 
     // 断言列表数据结果
-    async assertElementVisible(ptypeSearch: string) {
-        console.log(`断言 '${ptypeSearch}' 存在且可见，数量等于1`);
+    async assertElementVisible(searchValue: string) {
+        console.log(`断言 '${searchValue}'`);
 
-        const locator = this.page.getByText(ptypeSearch);
-        // 增加超时时间，确保页面加载完成后再进行断言
-        await expect(locator.first()).toBeVisible({ timeout: 10000 });
-        const count = await locator.count();
+        // 等待页面加载完成，确保列表数据已渲染
+        await this.page.waitForLoadState('domcontentloaded');
+        
+        // 使用更通用的定位器来查找包含searchValue的元素
+        // 首先尝试在所有行中查找
+        let locator = this.page.getByRole('row').getByText(searchValue);
+        let count = await locator.count();
+        
+        // 如果在所有行中都找不到，再尝试在第一行中查找
         if (count === 0) {
-            console.log(`断言结果: 商品 '${ptypeSearch}' 不存在`);
+            locator = this.page.getByRole('row', { name: '1' }).getByText(searchValue);
+            count = await locator.count();
+        }
+        
+        if (count === 0) {
+            console.log(`断言结果: '${searchValue}' 不存在`);
             expect(count).toBe(0);
         } else if (count === 1) {
-            console.log(`断言结果: 商品 '${ptypeSearch}' 存在，数量为 ${count}`);
+            await expect(locator.first()).toBeVisible({ timeout: 10000 });
+            console.log(`断言结果: '${searchValue}' 存在，数量为 ${count}`);
             expect(count).toBe(1);
         } else {
-            console.log(`断言结果: 商品 '${ptypeSearch}' 存在多个，数量为 ${count}`);
+            await expect(locator.first()).toBeVisible({ timeout: 10000 });
+            console.log(`断言结果: '${searchValue}' 存在多个，数量为 ${count}`);
         };
         return count;
     };

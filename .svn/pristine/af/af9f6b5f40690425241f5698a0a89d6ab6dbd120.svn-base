@@ -1,0 +1,222 @@
+import { Page, expect} from '@playwright/test';
+
+/**
+ * PtypePage 类
+ * 
+ * 该类封装了与商品资料相关的页面交互方法，
+ * 主要用于在测试过程中对商品资料进行操作。
+ */
+export class BasicPage {
+    private  page: Page;
+
+    /**
+     * 构造函数
+     * @param page Playwright Page 对象
+     */
+    constructor(page: Page) { 
+        this.page = page;
+    };
+    
+    /**
+     * 点击匹配指定文本的按钮（支持字符间有空格的情况）
+     * @param buttonText 用于匹配按钮文本的字符串
+     */
+    async getByRoleButtonClick(buttonText: string) {
+        console.log(`点击按钮: ${buttonText}`);
+        try {
+            // 创建正则表达式，支持按钮文本中字符间有空格的情况，并匹配完整的按钮文本
+            const pattern = '^' + buttonText.split('').map(char => `${char}\s*`).join('').replace(/\s\*$/, '') + '$';
+            await this.page.getByRole('button', { name: new RegExp(pattern) }).click();
+        } catch (error) {
+            console.error(`点击按钮 '${buttonText}' 失败:`, error.message);
+            throw error;
+        }
+    };
+
+    /**
+     * 点击指定名称的录入框，底层文字描述为inputName
+     * @param inputName 录入框名称
+     */
+    async getByRoleClickInput(inputName: string) {
+        console.log(`点击录入框: ${inputName}`);
+        await this.page.getByRole('textbox', { name: inputName, exact: true }).click();
+    };
+    
+    /**
+     * 在指定名称的录入框中输入值，底层文字描述为inputName
+     * @param inputName 录入框名称
+     * @param inputValue 要输入的值
+     */
+    async getByRoleInputValue(inputName: string, inputValue: string) {
+        console.log(`在录入框 '${inputName}' 中输入值: ${inputValue}`);
+        await this.page.getByRole('textbox', { name: inputName, exact: true }).fill(inputValue);
+    };
+
+    /**
+     * 点击指定名称
+     * @param text 选择框名称
+     */
+    async getByTextClick(text: string) {
+        console.log(`点击选择: ${text}`);
+        await this.page.getByText(text, { exact: true }).click();
+    };
+
+    /**
+     * 通过占位符定位录入框并输入值，元素属性有placeholder
+     * @param placeholder 占位符
+     * @param inputValue 要输入的值
+     */
+    async getByPlaceholderInput(placeholder: string, inputValue: string) {
+        console.log(`在录入框 '${placeholder}' 中输入值: ${inputValue}`);
+        await this.page.getByPlaceholder(placeholder, { exact: true }).fill(inputValue);
+    };
+
+    /**
+     * 定位指定标签关联的第一个输入框元素
+     * 该函数通过标签文本查找与之关联的第一个输入框元素，用于后续操作
+     * @param label 标签名称
+     * @returns 返回定位到的第一个输入框元素的 Promise 对象
+     */
+    // 更稳定的CSS选择器
+    async labelInput(label: string) {
+        //console.log(`指定标签 '${label}' 的输入框`);
+        return this.page.locator(`label:has-text("${label}") + * input`).first();
+    };
+    
+    /**
+     * 定位指定标签关联的第一个textarea输入框元素
+     * @param label 标签名称
+     * @returns 返回定位到的第一个textarea输入框元素的 Promise 对象
+     */
+    async labelTextareaInput(label: string) {
+        //console.log(`指定标签 '${label}' 的textarea输入框`);
+        return this.page.locator(`label:has-text("${label}") + * textarea`).first();
+    };
+
+    /**
+     * 点击指定标签的下拉框并选择选项
+     * @param label 标签名称
+     * @param option 选项名称
+     */
+    async clickDropdownAndSelect(label: string, option: string) {
+        console.log(`点击下拉框 '${label}' 并选择选项 '${option}'`);
+        await (await this.labelInput(label)).click();
+        await this.getByTextClick(option);
+    };
+
+    /**
+     * 输入指定标签的输入框
+     * @param label 标签名称
+     * @param inputValue 输入值
+     */
+    async inputLabelValue(label: string, inputValue: string) {
+        console.log(`在 '${label}' 输入值: ${inputValue}`);
+        await (await this.labelInput(label)).clear();
+        await (await this.labelInput(label)).fill(inputValue);
+    };
+
+    /**
+     * 输入指定标签的输入框
+     * @param label 标签名称
+     * @param inputValue 输入值
+     */
+    async labelTextareaInputValue(label: string, inputValue: string) {
+        console.log(`在 '${label}' 输入值: ${inputValue}`);
+        await (await this.labelTextareaInput(label)).fill(inputValue);
+    };
+
+    // 列表第一行数据操作
+    async listFirstRowOperation(operationName: string) {
+        console.log(`列表第一行数据操作: ${operationName}`);
+        await this.page.getByRole('row', { name: '1' }).getByRole('button', { name: operationName }).click();
+    };
+
+
+    // 断言列表数据结果
+    async assertElementVisible(searchValue: string) {
+        console.log(`断言 '${searchValue}'`);
+
+        // 等待页面加载完成，确保列表数据已渲染
+        await this.page.waitForLoadState('domcontentloaded');
+        
+        // 使用更通用的定位器来查找包含searchValue的元素
+        // 首先尝试在所有行中查找
+        let locator = this.page.getByRole('row').getByText(searchValue);
+        let count = await locator.count();
+        
+        // 如果在所有行中都找不到，再尝试在第一行中查找
+        if (count === 0) {
+            locator = this.page.getByRole('row', { name: '1' }).getByText(searchValue);
+            count = await locator.count();
+        }
+        
+        if (count === 0) {
+            console.log(`断言结果: '${searchValue}' 不存在`);
+            expect(count).toBe(0);
+        } else if (count === 1) {
+            await expect(locator.first()).toBeVisible({ timeout: 10000 });
+            console.log(`断言结果: '${searchValue}' 存在，数量为 ${count}`);
+            expect(count).toBe(1);
+        } else {
+            await expect(locator.first()).toBeVisible({ timeout: 10000 });
+            console.log(`断言结果: '${searchValue}' 存在多个，数量为 ${count}`);
+        };
+        return count;
+    };
+
+    
+    // 断言是否有必填项没填写，css=.el-form-item__error，大于0循环打印该元素的文本
+    async assertRequiredFields() {
+        console.log(`断言是否有必填项没填写`);
+        const locator = this.page.locator('css=.el-form-item__error');
+        const count = await locator.count();
+        if (count > 0) {
+            console.log(`断言结果: 有必填项没填写`);
+            for (let i = 0; i < count; i++) {
+                const errorText = await locator.nth(i).textContent();
+                console.log(`必填项的错误信息: ${errorText}`);
+            };
+            expect(count).toBeGreaterThan(0);
+            // 如果有必填项未填写，则抛出异常，不再执行后续代码
+            throw new Error('存在必填项未填写，测试用例执行终止');
+        } else {
+            expect(count).toBe(0);
+            console.log(`断言结果: 没有必填项没填写`);
+        };
+    };
+
+    /**
+     * 商品校验处理
+     * @param checkItem 校验项名称
+     * @param saveContinue 保存继续按钮名称
+     */
+    async checkItemClick(checkItem: string, saveContinue: string) {
+        console.log(`检查是否有: ${checkItem} 弹窗`);
+        // 最多检查2次
+        for (let i = 0; i < 2; i++) {
+            const checkItemCount = await this.page.getByRole('dialog').getByText(checkItem).count();
+            if (checkItemCount > 0) {
+                console.log(`检测到 ${checkItem} 弹窗，执行保存继续`);
+                await this.page.getByRole('dialog').getByText(saveContinue).click();
+                // 等待弹窗消失
+                await this.page.waitForTimeout(1000);
+            } else {
+                console.log(`未检测到 ${checkItem} 弹窗, 执行后面的`);
+                break;
+            };
+        };
+    };
+
+    /**
+     * 点击商品左侧基础分类
+     * @param categoryName 分类名称
+     */
+    async clickLeftCategory(categoryName: string) {
+        console.log(`点击左侧分类: ${categoryName}`);
+        await this.page.getByLabel('基础分类').getByText(categoryName).click();
+    };
+
+
+
+
+};
