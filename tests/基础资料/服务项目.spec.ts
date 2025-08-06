@@ -1,0 +1,118 @@
+import { test, Page } from '@playwright/test';
+import { setupTestEnvironment } from '../../pages/testUtils';
+import { generateRandomUpperCase } from '../../common/randomUpperCaseGenerator';
+import { OpenTheMenuPage } from '../../pages/openTheMenu.page';
+import { BasicPage } from '../../pages/basic.page';
+import { TEST_BASIC_ELEMENT } from '../../data/testBasicElement';
+import { TEST_Menu } from '../../data/testmenu';
+import { generateRandomPrice } from '../../common/randomPriceGenerator';
+
+
+
+// 使用serial模式确保测试用例按顺序执行
+test.describe('服务项目', () => {
+
+    // 定义测试中使用的变量
+    let context: any;
+    let page: Page;
+    let openTheMenuPage: any;
+    let servicePtype: any;
+    let servicePtypeName: string;
+
+
+    // 所有用例开始前执行，初始化浏览器上下文和页面
+    test.beforeAll(async ({ browser }) => {
+        console.log('开始执行 beforeAll 钩子');
+        try {
+            // 使用通用工具设置测试环境，创建浏览器上下文和页面
+            const result = await setupTestEnvironment(browser);
+            context = result.context;
+            page = result.page;
+            console.log('浏览器上下文和页面初始化完成');
+        } catch (error) {   
+            console.error('初始化浏览器上下文失败:', error.message);
+            throw error;
+        };
+
+        // 初始化菜单页面对象
+        openTheMenuPage = new OpenTheMenuPage(page);
+        console.log('beforeAll 钩子执行完成');
+        // 生成随机项目名称
+        servicePtypeName = generateRandomUpperCase();
+    });
+
+    // 每个测试用例执行前打开菜单
+    test.beforeEach(async () => {
+        // 打开基础资料->服务项目菜单
+        await openTheMenuPage.openMenu(TEST_Menu.basicInformation, TEST_Menu.servicePtype);
+        // 初始化服务项目页面对象
+        servicePtype = new BasicPage(page);
+    });
+
+    // 用例1：服务项目新增
+    test('服务项目新增', async () => {
+        // 点击新增按钮
+        await servicePtype.getByRoleButtonClick(TEST_BASIC_ELEMENT.servicePtypeDetails.newItems);
+        // 输入项目名称
+        await servicePtype.inputLabelValue(TEST_BASIC_ELEMENT.servicePtypeDetails.labelName, servicePtypeName);
+        // 输入价格
+        await servicePtype.inputLabelValue(TEST_BASIC_ELEMENT.servicePtypeDetails.labelPrice, generateRandomPrice());
+        // 点击保存按钮
+        await servicePtype.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.save);
+
+    });
+
+    // 用例2：服务项目搜索
+    test('服务项目搜索', async () => {
+        // 输入项目名称
+        await servicePtype.getByPlaceholderInput(TEST_BASIC_ELEMENT.SearchInput.servicePtype, servicePtypeName);
+        // 点击查询按钮
+        await servicePtype.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.search);
+        // 验证搜索结果
+        await servicePtype.assertElementVisible(servicePtypeName);
+
+    }); 
+
+    // 用例3：服务项目删除
+    test('服务项目删除', async () => {
+        // 输入项目名称
+        await servicePtype.getByPlaceholderInput(TEST_BASIC_ELEMENT.SearchInput.servicePtype, servicePtypeName);
+        // 点击查询按钮
+        await servicePtype.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.search);
+        // 点击删除按钮
+        await servicePtype.listFirstRowOperation(TEST_BASIC_ELEMENT.listOperationButton.delete);
+        // 确认删除
+        await servicePtype.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.confirm);
+        // 验证删除成功
+        await servicePtype.assertElementVisible(servicePtypeName);
+    }); 
+
+
+    // 每个测试用例执行后关闭菜单
+    test.afterEach(async () => {
+        // 刷新页面，关闭当前菜单
+        await openTheMenuPage.closeMenu(TEST_Menu.servicePtype);
+    });
+
+    // 所有用例结束后执行，清理资源
+    test.afterAll(async () => {
+        console.log('开始执行 afterAll 钩子');
+        // 关闭浏览器上下文和页面
+        try {
+            if (page && page.close) {
+                await page.close();
+                console.log('页面已关闭');
+            };
+            if (context && context.close) {
+                await context.close();
+                console.log('浏览器上下文已关闭');
+            };
+        } catch (error) {
+            console.error('关闭浏览器上下文时出错:', error.message);
+        };
+        console.log('afterAll 钩子执行完成');
+        
+    });
+});
+
+
