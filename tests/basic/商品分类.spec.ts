@@ -58,16 +58,25 @@ test.describe('商品分类', () => {
         await ptypeClassPage.labelTextareaInputValue(TEST_BASIC_ELEMENT.ptypeClassDetails.ptypeClassRemark, ptypeClassValue);
         // 点击保存按钮
         await ptypeClassPage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.confirm);
+        // 断言提交成功
+        await ptypeClassPage.assertAlertVisible();
         // 断言列表数据结果
         await ptypeClassPage.assertElementVisible(ptypeClassValue);
     });
 
     // 测试用例2：删除商品分类
     test('删除商品分类-最后一行', async () => {
+        // 断言列表数据结果
+        await ptypeClassPage.assertElementVisible(ptypeClassValue);
         // 列表最后行数据操作
         await ptypeClassPage.listLastRowOperation(TEST_BASIC_ELEMENT.listOperationButton.delete);
         // 点击确定按钮
         await ptypeClassPage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.confirm);
+        // 断言提交成功
+        await ptypeClassPage.assertAlertVisible();
+        // 断言列表数据结果
+        await ptypeClassPage.assertElementVisible(ptypeClassValue);
+
     });
 
 

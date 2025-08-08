@@ -13,14 +13,15 @@ const csvFilePath = path.join(__dirname, '../../data/供应商.csv');
 const randomData = readRandomLineFromCsv(csvFilePath);
 
 // 使用serial模式确保测试用例按顺序执行
-test.describe('供应商', () => {
+test.describe('货位', () => {
 
     // 定义测试中使用的变量
     let context: any;
     let page: Page;
     let openTheMenuPage: any;
-    let btypePage: any;
-    let btypeFullName: string;
+    let gtypePage: any;
+    let gtypeFullName: string;
+
 
     // 所有用例开始前执行，初始化浏览器上下文和页面
     test.beforeAll(async ({ browser }) => {
@@ -43,57 +44,57 @@ test.describe('供应商', () => {
 
     // 每个测试用例执行前打开菜单
     test.beforeEach(async () => {
-        // 打开基础资料->供应商菜单
-        await openTheMenuPage.openMenu(TEST_Menu.basicInformation, TEST_Menu.btype);
-        // 初始化供应商页面对象
-        btypePage = new BasicPage(page);
+        // 打开基础资料->货位菜单
+        await openTheMenuPage.openMenu(TEST_Menu.basicInformation, TEST_Menu.gtype);
+        // 初始化货位页面对象
+        gtypePage = new BasicPage(page);
     });
 
-    // 测试用例1：添加供应商
-    test('添加供应商', async () => {
-        await btypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.clickNew);
-        if (randomData) {
-            // 生成唯一的供应商全名
-            btypeFullName = randomData['生产厂商'] + generateRandomUpperCase();
-            // 选择固定分类
-            await btypePage.clickDropdownAndSelect(TEST_BASIC_ELEMENT.btypeDetails.btypeClassId, '工具新增');
-            // 录入供应商名称
-            await btypePage.inputLabelValue(TEST_BASIC_ELEMENT.btypeDetails.btypeFullName, btypeFullName);
-        }else{
-            throw new Error('随机数据为空');
-        };
-        // 保存
-        await btypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.save);
-        // 搜索录入
-        await btypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.SearchInput.btype, btypeFullName);
-        // 查询
-        await btypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.search);
-        // 断言
-        await btypePage.assertElementVisible(btypeFullName);
+    // 测试用例1：新增货位
+    test('新增货位', async () => {
+        // 点击新增按钮
+        await gtypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.gtypeDetails.newGtype);
+        // 点击所属货区
+        await gtypePage.getByRoleClickInput(TEST_BASIC_ELEMENT.gtypeDetails.disabled);
+        // 点击打开陈列区001
+        await gtypePage.getByTextClick(TEST_BASIC_ELEMENT.gtypeDetails.gtypeArea);
+        // 选择一号柜001
+        await gtypePage.getByTextClick(TEST_BASIC_ELEMENT.gtypeDetails.gtypeCubicle);
+        // 获取货位名称，用于后面断言
+        gtypeFullName = await gtypePage.getInputValue(TEST_BASIC_ELEMENT.gtypeDetails.gtypeFullName);
+        // 点击保存按钮
+        await gtypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.save);
+        // 断言提交成功
+        await gtypePage.assertAlertVisible();
+        // 断言货位名称
+        await gtypePage.assertElementVisible(gtypeFullName);
 
     });
 
-    // 测试用例2：删除查询到的供应商资料
-    test('删除查询到供应商资料', async ({}) => {
-         // 在列表中查找新增的供应商
-        await btypePage.getByRoleInputValue(TEST_BASIC_ELEMENT.SearchInput.btype, btypeFullName);
+    // 用例2，查询货位，后删除
+    test('查询货位', async () => {
+        // 输入货位名称
+        await gtypePage.getByPlaceholderInput(TEST_BASIC_ELEMENT.SearchInput.gtype, gtypeFullName);
         // 点击查询按钮
-        await btypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.search);
-        // 断言供应商是否存在
-        await btypePage.assertElementVisible(btypeFullName);
-        // 点击列表第一行的删除按钮
-        await btypePage.listFirstRowOperation(TEST_BASIC_ELEMENT.listOperationButton.delete);
-        // 点击确认删除按钮
-        await btypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.confirm);
-        // 断言供应商是否成功删除（这里逻辑可能需要修正，删除成功应该检查供应商不存在）
-        await btypePage.assertElementVisible(btypeFullName);
+        await gtypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.search);
+        // 断言查询结果
+        await gtypePage.assertElementVisible(gtypeFullName);
+        // 点击列表第一行操作按钮
+        await gtypePage.listLastRowOperation(TEST_BASIC_ELEMENT.listOperationButton.delete);
+        // 确认删除
+        await gtypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.confirm);
+        // 断言提交成功
+        await gtypePage.assertAlertVisible();
+        // 断言删除成功
+        await gtypePage.assertElementVisible(gtypeFullName);
+
     });
 
 
     // 每个测试用例执行后关闭菜单
     test.afterEach(async () => {
         // 刷新页面，关闭当前菜单
-        await openTheMenuPage.closeMenu(TEST_Menu.btype);
+        await openTheMenuPage.closeMenu(TEST_Menu.gtype);
     });
 
     // 所有用例结束后执行，清理资源

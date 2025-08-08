@@ -14,7 +14,7 @@ const csvFilePath = path.join(__dirname, '../../data/商品资料.csv');
 const randomData = readRandomLineFromCsv(csvFilePath);
 
 // 使用serial模式确保测试用例按顺序执行
-test.describe.serial('商品资料', () => {
+test.describe('商品资料', () => {
 
     // 定义测试中使用的变量
     let context: any;
@@ -108,10 +108,10 @@ test.describe.serial('商品资料', () => {
         await ptypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.save);
         // 断言是否有必填项没填写
         await ptypePage.assertRequiredFields();
-        
         // 处理商品校验弹窗（如果出现）
         await ptypePage.checkItemClick(TEST_BASIC_ELEMENT.ptypeDetails.checkItem, TEST_BASIC_ELEMENT.button.saveContinue);
-
+        // 断言提交成功
+        await ptypePage.assertAlertVisible();
         // 保存完成后，在列表中查找新增的商品
         await ptypePage.getByPlaceholderInput(TEST_BASIC_ELEMENT.SearchInput.ptype, ptypeFullName);
         // 点击查询按钮
@@ -132,6 +132,8 @@ test.describe.serial('商品资料', () => {
         await ptypePage.listFirstRowOperation(TEST_BASIC_ELEMENT.listOperationButton.delete);
         // 点击确认删除按钮
         await ptypePage.getByRoleButtonClick(TEST_BASIC_ELEMENT.button.confirm);
+        // 断言提交成功
+        await ptypePage.assertAlertVisible();
         // 断言商品是否成功删除（这里逻辑可能需要修正，删除成功应该检查商品不存在）
         await ptypePage.assertElementVisible(ptypeFullName);
     });
@@ -139,8 +141,19 @@ test.describe.serial('商品资料', () => {
 
     // 每个测试用例执行后关闭菜单
     test.afterEach(async () => {
-        // 刷新页面，关闭当前菜单
-        await openTheMenuPage.closeMenu(TEST_Menu.ptype);
+        // 检查页面是否仍然有效再关闭菜单
+        try {
+            // 检查页面标题或某个关键元素是否存在
+            const isPageValid = await page.isVisible('text=商品资料', { timeout: 5000 }).catch(() => false);
+            if (isPageValid) {
+                console.log('页面有效，执行关闭菜单操作');
+                await openTheMenuPage.closeMenu(TEST_Menu.ptype);
+            } else {
+                console.log('页面已关闭或无效，跳过关闭菜单操作');
+            }
+        } catch (error) {
+            console.log('检查页面状态时出错，跳过关闭菜单操作:', error.message);
+        }
     });
 
     // 所有用例结束后执行，清理资源
