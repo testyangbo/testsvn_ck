@@ -24,6 +24,8 @@ export class AlertHandler {
      */
     async assertAlertVisible() {
         console.log(`是否提交成功....`);
+        // 等待弹窗出现
+        await this.page.getByRole('alert').waitFor({ state: 'visible' });
         
         // 获取弹窗数量
         const elementCount = await this.page.getByRole('alert').count();

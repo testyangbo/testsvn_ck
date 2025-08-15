@@ -48,4 +48,7 @@ export const TEST_Menu = {
   otherncome: '收入项目',
   expenses: '费用支出',
   ptypetaboo: '配伍禁忌',
+  goodsstocksinitial: '期初库存',
+  goodstockcome: '期初往来',
+  pricesetting: '价格设置',
 };

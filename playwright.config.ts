@@ -32,7 +32,7 @@ export default defineConfig({
     
     // 防止浏览器在测试结束后自动关闭
     launchOptions: {
-      slowMo: 1000,//用于减慢浏览器的操作速度
+      //slowMo: 1000,//用于减慢浏览器的操作速度
     },
   },
 

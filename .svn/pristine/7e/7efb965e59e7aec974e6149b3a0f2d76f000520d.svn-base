@@ -31,9 +31,6 @@ export class BasicPage {
      * @param buttonText 用于匹配按钮文本的字符串
      */
     async getByRoleButtonClick(buttonText: string, exact: boolean = true) {
-        // 等待按钮可见
-        await this.page.getByRole('button', { name: buttonText, exact: true }).waitFor({ state: 'visible' });
- 
         console.log(`点击按钮: ${buttonText}`);
         if (exact) {
                 await this.page.getByRole('button', { name: buttonText, exact: true }).click();
@@ -47,9 +44,8 @@ export class BasicPage {
                 throw error;
             }
         };
-        // 等待1秒
+        // 等待1秒以确保数据刷新
         await this.page.waitForTimeout(1000);
-
     };
 
     /**
@@ -100,9 +96,6 @@ export class BasicPage {
     async getByPlaceholderInput(placeholder: string, inputValue: string) {
         console.log(`在录入框 '${placeholder}' 中输入值: ${inputValue}`);
         await this.page.getByPlaceholder(placeholder, { exact: true }).fill(inputValue);
-        // 等待1秒
-        await this.page.waitForTimeout(1000);
-
     };
 
     /**
@@ -191,13 +184,37 @@ export class BasicPage {
         await (await this.labelTextareaInput(label)).fill(inputValue);
     };
 
+    /**
+     * 列表第一行数据操作
+     * @param operationName 操作名称
+     */
+    async listFirstRowOperation(operationName: string) {
+        console.log(`列表第一行数据操作: ${operationName}`);
+        await this.page.getByRole('row', { name: '1' }).getByRole('button', { name: operationName }).click();
+        // 等待1秒以确保数据刷新
+        await this.page.waitForTimeout(1000);
+    };
+
+    /**
+     * 列表最后行数据操作
+     * @param operationName 操作名称
+     */
+    async listLastRowOperation(operationName: string) {
+        console.log(`列表最后行数据操作: ${operationName}`);
+        // 获取所有行
+        const rows = this.page.getByRole('row');
+        // 获取最后一行并点击操作按钮
+        await rows.last().getByRole('button', { name: operationName }).click();
+        // 等待1秒以确保数据刷新
+        await this.page.waitForTimeout(1000);
+    };
+
 
     // 断言列表数据结果
     async assertElementVisible(searchValue: string) {
         console.log(`断言 '${searchValue}'`);
 
         // 等待页面加载完成，确保列表数据已渲染
-        await this.page.waitForTimeout(1000);
         await this.page.waitForLoadState('domcontentloaded');
         
         // 使用更通用的定位器来查找包含searchValue的元素
@@ -275,6 +292,15 @@ export class BasicPage {
         };
     };
 
+    /**
+     * 点击商品左侧基础分类
+     * @param categoryName 分类名称
+     */
+    async clickLeftCategory(categoryName: string) {
+        console.log(`点击左侧分类: ${categoryName}`);
+        await this.page.getByLabel('基础分类').getByText(categoryName).click();
+    };
+
 
     /**
      * 获取指定input元素中输入的值
@@ -282,8 +308,6 @@ export class BasicPage {
      * @returns input元素中输入的值
      */
     async getInputValue(element: string) {
-        // 等待1秒
-        await this.page.waitForTimeout(1000);
         console.log(`获取元素: ${element} 中输入的值`);
         const inputValue = await this.page.locator(`label:has-text("${element}") + * input`).first().inputValue();
         console.log(`元素: ${element} 中输入的值为: ${inputValue}`);
@@ -297,7 +321,6 @@ export class BasicPage {
         await this.alertHandler.assertAlertVisible();
     };
 
-
     /**
      * 点击列表指定行数据，选中
      * @param rowNumber 行号
@@ -305,6 +328,7 @@ export class BasicPage {
      * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
      */
     async tableElementClick(rowNumber: number, columnHeader: string, dialogTitle?: string) {
+        console.log(`单击列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的单元格`);
         await this.table.tabelSpecifiedRowColumnClick(rowNumber, columnHeader, dialogTitle);
     };
 
@@ -316,89 +340,10 @@ export class BasicPage {
      * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
      */
     async tableElementDblClick(rowNumber: number, columnHeader: string, dialogTitle?: string) {
+        console.log(`双击列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的单元格`);
         await this.table.tabelSpecifiedRowColumnDblClick(rowNumber, columnHeader, dialogTitle);
     };
 
-
-    /**
-     * 输入列表指定行数据，文本输入框
-     * @param rowNumber 行号
-     * @param columnHeader 列标题
-     * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
-     */
-    async tableElementTextInput(rowNumber: number, columnHeader: string, inputValue: string, dialogTitle?: string) {
-
-        await this.table.tabelSpecifiedRowColumnTextInput(rowNumber, columnHeader, inputValue, dialogTitle);
-
-    };
-
-    /**
-     * 输入列表指定行数据，数值输入框
-     * @param rowNumber 行号
-     * @param columnHeader 列标题
-     * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
-     */
-    async tableElementNumberInput(rowNumber: number, columnHeader: string, inputValue: string, dialogTitle?: string) {
-
-        await this.table.tabelSpecifiedRowColumnNumberInput(rowNumber, columnHeader, inputValue, dialogTitle);
-    };
-
-
-    /**
-     * 列表第一行数据操作
-     * @param operationName 操作名称
-     */
-    async listFirstRowOperation(operationName: string) {
-
-        await this.table.tableFirstRowClick(operationName);
-
-    };
-
-    /**
-     * 列表最后行数据操作
-     * @param operationName 操作名称
-     */
-    async listLastRowOperation(operationName: string) {
-
-        await this.table.tableLastRowClick(operationName);
- 
-    };
-
-
-    /**
-     * 列表勾选框--全选
-     */
-    async tabelCheckAll() {
-        (await this.table.tabelCheckAll()).click();
-    };
-
-
-    /**
-     * 价格调整
-     * @param priceName 价格名称
-     * @param suanfa 运算符
-     * @param valuse 数值
-     */
-    async priceAdjustment(priceName: string, suanFa: string, valuse: string) {
-
-       const priceElement =  this.page.getByLabel(priceName + '=').locator('div');
-
-       console.log(`对价格: ${priceName} 进行设置`);
-       //await priceElement.filter({hasText: '无公式'}).nth(4).click();
-       await priceElement.getByRole('img').nth(0).click();
-
-       console.log(`选择价格公式: ${priceName}`);
-       await this.page.getByRole('option').getByText(priceName).first().click();
-
-       console.log(`选择运算符: ${suanFa}`);
-       //await priceElement.locator('.qf-report-select').nth(1).click();
-       await priceElement.getByRole('img').nth(1).click();
-       await this.page.getByRole('option').getByText(suanFa).click();
-        
-       console.log(`输入数值: ${valuse}`);
-       await priceElement.getByRole('spinbutton').fill(valuse);
-
-    };
 
 
 };

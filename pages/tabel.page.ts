@@ -1,0 +1,226 @@
+import { Locator, Page, expect } from '@playwright/test';
+
+/**
+ * ListPage 类
+ * 
+ * 该类封装了与列表表格相关的页面交互方法，
+ * 主要用于在测试过程中对列表数据进行操作。
+ */
+export class TabelPage {
+    private page: Page;
+
+    /**
+     * 构造函数
+     * @param page Playwright Page 对象
+     */
+    constructor(page: Page) {
+        this.page = page;
+    }
+
+    /**
+     * 定位列表指定行数据
+     * @param rowNumber 行号(从1开始)
+     * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
+     * @returns 返回定位到的行元素的 Promise 对象
+     */
+
+    async dialogTitleSelect(dialogTitle: string) {
+        // 定位弹窗标题元素
+        const dialogTitleElement = this.page.locator('.el-dialog').filter({ hasText: dialogTitle });
+        return dialogTitleElement;
+    };
+
+    /**
+     * 定位表格指定行数据
+     * @param rowNumber 行号(从1开始)
+     * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
+     * @returns 返回定位到的行元素的 Promise 对象
+     */
+    async tabelSpecifiedRowSelect(rowNumber: number, dialogTitle?: string) {
+
+        // 根据是否提供了弹窗标题来构建选择器
+        let row: Locator;
+        if (dialogTitle) {
+            // 如果提供了弹窗标题，优先在指定弹窗中查找
+            const dialog = await this.dialogTitleSelect(dialogTitle);
+            // 兼容 el-table 和 vxe-table 两种表格类名
+            const elTableRow = dialog.locator('.el-table__body tr').nth(rowNumber - 1);
+            const vxeTableRow = dialog.locator('.vxe-table--body tbody tr').nth(rowNumber - 1);
+            row = elTableRow.or(vxeTableRow);
+        } else {
+            // 如果没有提供弹窗标题，直接在主页面中查找
+            // 兼容 el-table 和 vxe-table 两种表格类名
+            const elTableRow = this.page.locator('.el-table__body tr').nth(rowNumber - 1);
+            const vxeTableRow = this.page.locator('.vxe-table--body tbody tr').nth(rowNumber - 1);
+            row = elTableRow.or(vxeTableRow);
+        }
+        
+        return row;
+    };
+
+    /**
+     * 定位列表指定行、指定列的数据元素
+     * @param rowNumber 行号(从1开始)
+     * @param columnHeader 列标题名称
+     * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
+     * @returns 返回定位到的单元格元素的 Promise 对象
+     */
+    async tabelSpecifiedRowColumnSelect(rowNumber: number, columnHeader: string, dialogTitle?: string) {
+        //console.log(`定位列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的单元格`);
+        // 通过行号定位指定行
+        const row = await this.tabelSpecifiedRowSelect(rowNumber, dialogTitle);
+        
+        // 根据是否提供了弹窗标题来构建列标题选择器
+        let header: Locator;
+        if (dialogTitle) {
+            // 如果提供了弹窗标题，在指定弹窗中查找列标题
+            const dialog = await this.dialogTitleSelect(dialogTitle);
+            // 兼容 el-table 和 vxe-table 两种表格类名
+            const elTableHeader = dialog.locator('.el-table__header-wrapper .el-table__header th')
+                .filter({ hasText: columnHeader })
+                .first();
+            const vxeTableHeader = dialog.locator('.vxe-table--header thead th')
+                .filter({ hasText: columnHeader })
+                .first();
+            header = elTableHeader.or(vxeTableHeader);
+        } else {
+            // 如果没有提供弹窗标题，直接在主页面中查找列标题
+            // 兼容 el-table 和 vxe-table 两种表格类名
+            const elTableHeader = this.page.locator('.el-table__header-wrapper .el-table__header th')
+                .filter({ hasText: columnHeader })
+                .first();
+            const vxeTableHeader = this.page.locator('.vxe-table--header thead th')
+                .filter({ hasText: columnHeader })
+                .first();
+            header = elTableHeader.or(vxeTableHeader);
+        }
+        
+        // 获取列的索引
+        const columnIndex = await header.evaluate(el => {
+            const cell = el as HTMLTableCellElement;
+            return cell.cellIndex;
+        });
+        
+        // 返回指定行、指定列的单元格
+        return row.locator('td').nth(columnIndex);
+    }
+
+    /**
+     * 获取列表指定行、指定列的文本内容
+     * @param rowNumber 行号(从1开始)
+     * @param columnHeader 列标题名称
+     * @returns 返回单元格文本内容的 Promise 对象
+     */
+    async getTabelSpecifiedRowColumnText(rowNumber: number, columnHeader: string, dialogTitle?: string) {
+        console.log(`获取列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的文本内容`);
+        const cell = await this.tabelSpecifiedRowColumnSelect(rowNumber, columnHeader, dialogTitle);
+        return await cell.textContent();
+    }
+
+    /**
+     * 点击列表指定行、指定列的元素
+     * @param rowNumber 行号(从1开始)
+     * @param columnHeader 列标题名称
+     */
+    async tabelSpecifiedRowColumnClick(rowNumber: number, columnHeader: string, dialogTitle?: string) {
+        console.log(`单击列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的元素`);
+        const cell = await this.tabelSpecifiedRowColumnSelect(rowNumber, columnHeader, dialogTitle);
+        await cell.click();
+    }
+
+    /**
+     * 双击列表指定行、指定列的元素
+     * @param rowNumber 行号(从1开始)
+     * @param columnHeader 列标题名称
+     */
+    async tabelSpecifiedRowColumnDblClick(rowNumber: number, columnHeader: string, dialogTitle?: string) {
+        console.log(`双击列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的元素`);
+        const cell = await this.tabelSpecifiedRowColumnSelect(rowNumber, columnHeader, dialogTitle);
+        await cell.dblclick();
+    };
+
+    /**
+     * 在列表指定行、指定列的文本输入框中输入文本
+     * @param rowNumber 行号(从1开始)
+     * @param columnHeader 列标题名称
+     * @param inputValue 要输入的文本值
+     * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
+     */
+    async tabelSpecifiedRowColumnTextInput(rowNumber: number, columnHeader: string, inputValue: string, dialogTitle?: string) {
+        console.log(`在列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的单元格，输入值为: ${inputValue}`);
+        const cell = await this.tabelSpecifiedRowColumnSelect(rowNumber, columnHeader, dialogTitle);
+        // 尝试在2秒内完成文本输入操作
+        await Promise.race([
+            cell.getByRole('textbox').clear(),
+            cell.getByRole('textbox').fill(inputValue),
+            cell.getByRole('textbox').press('Tab'),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('文本输入操作超时')), 2000)),
+        ]);
+    };
+
+    /**
+     * 在列表指定行、指定列的数值输入框中输入数值
+     * @param rowNumber 行号(从1开始)
+     * @param columnHeader 列标题名称
+     * @param inputValue 要输入的数值
+     * @param dialogTitle 弹窗标题（可选），用于在指定弹窗中查找元素
+     */
+    async tabelSpecifiedRowColumnNumberInput(rowNumber: number, columnHeader: string, inputValue: string, dialogTitle?: string) {
+        console.log(`在列表第 ${rowNumber} 行，列标题为 '${columnHeader}' 的单元格，输入值为: ${inputValue}`);
+        const cell = await this.tabelSpecifiedRowColumnSelect(rowNumber, columnHeader, dialogTitle);
+        // 尝试在2秒内完成数值输入操作
+        await Promise.race([
+            cell.getByRole('spinbutton').clear(),
+            cell.getByRole('spinbutton').fill(inputValue),
+            cell.getByRole('spinbutton').press('Tab'),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('数值输入操作超时')), 2000)),
+        ]);
+
+    };
+
+
+
+    /**
+     * 定位表格左侧固定元素
+     * @returns 返回表格固定元素的 Promise 对象
+     */
+    async tableFixedElement() {
+        // 修改为直接通过角色定位行元素，不依赖于特定的CSS类
+        return this.page.getByRole('row');
+    }
+
+    /**
+     * 列表第一行数据左侧操作按钮点击
+     * @param operationName 操作名称
+     */
+    async tableFirstRowClick(operationName: string) {
+        console.log(`列表第一行数据操作: ${operationName}`);
+        const rows = await this.tableFixedElement();
+        await rows.getByRole('button', { name: operationName }).first().click();
+        // 等待1秒以确保数据刷新
+        await this.page.waitForTimeout(1000);
+    };
+
+    /**
+     * 列表最后行数据左侧操作按钮点击
+     * @param operationName 操作名称
+     */
+    async tableLastRowClick(operationName: string) {
+        console.log(`列表最后行数据操作: ${operationName}`);
+        const rows = await this.tableFixedElement();
+        await rows.getByRole('button', { name: operationName }).last().click();
+        // 等待1秒以确保数据刷新
+        await this.page.waitForTimeout(1000);
+    };
+
+
+    /**
+     * 列表勾选框--全选
+     */
+    async tabelCheckAll() {
+        
+        return this.page.locator('.dx-header-row').getByRole('checkbox');
+   
+    };
+
+};

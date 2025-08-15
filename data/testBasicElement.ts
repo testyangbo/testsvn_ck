@@ -10,6 +10,8 @@ export const TEST_BASIC_ELEMENT = {
         cancel: '取消',
         batchOperation: '批量操作',
         batchModify: '批量修改',
+        newPeriod: '新增期初',
+        sure: '确认',
     },
 
     // 列表操作按钮
@@ -17,6 +19,7 @@ export const TEST_BASIC_ELEMENT = {
 
         delete: '删除',
         edit: '编辑',
+        deletes: '删 除',
 
     },
     
@@ -65,6 +68,7 @@ export const TEST_BASIC_ELEMENT = {
         
     },
 
+    // 供应商详情元素
     btypeDetails: {
         btypeFullName: '供应商名称',
         btypeCode: '请输入供应商编码',
@@ -143,6 +147,83 @@ export const TEST_BASIC_ELEMENT = {
         tabooIngredient: '禁忌药品关键字:',
         tabooResult: '请输入 配伍使用结果描述',
     },
+
+    // 新增期初弹窗元素
+    qiChuDialog: {
+        // 新增期初
+        ptypeCode: '请输入 商品编号',
+        gtype: '货位',
+        batchNumber: '批号',
+        quantity: '数量',
+        unitPrice: '单价',
+        productionDate: '生产日期',
+        expirationDate: '有效期至',
+        supplier: '供应商',
+
+    },
+
+    // 期初往来
+    qiChuCome: {
+        期初录入: '期初录入',
+        btypeFullName: '请选择供应商',
+        payTotal00: '期初应付账款:',
+        prepayTotal00: '期初预付账款:',
+        清零: '清零',
+
+
+    },
+
+
+    // 弹窗标题名称
+    dialogTitleName: {
+        qiChuName: '新增期初',
+        ptypeName: '商品选择',
+        gtypeName: '货位选择',
+        btypeName: '供应商选择',
+
+    },
+
+    // 商品选择弹窗表头名称
+    ptypeDialog: {
+        ptypeCode: '商品编号',
+        ptypeName: '商品名称',
+    },
+
+    // 货位选择弹窗表头名称
+    gtypeDialog: {
+        gtypeCode: '货位编号',
+        gtypeName: '货位名称',
+    },
+
+    // 供应商选择弹窗表头名称
+    btypeDialog: {
+        btypeName: '单位名称',
+    },
+
+    // 价格设置
+    pricesettingDialog: {
+        价格调整: '价格调整',
+        零售价: '零售价',
+        最近进价: '最近进价',
+        最低进价: '最低进价',
+        会员价: '会员价',
+        处方价: '处方价',
+        拆零最低价: '拆零最低价',
+        会员价1: '会员价1',
+        会员价2: '会员价2',
+        会员价3: '会员价3',
+        会员价4: '会员价4',
+        加法: '+',
+        减法: '-',
+        乘法: '*',
+        除法: '/',
+        remark: '调整原因=',
+    },
+
+
+
+
+
 
 
     
